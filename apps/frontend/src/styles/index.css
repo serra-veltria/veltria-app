@@ -1,0 +1,22 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  @apply bg-veltria-darker text-white font-sans antialiased;
+}
+
+.gradient-text {
+  background: linear-gradient(135deg, #22c55e 0%, #10b981 50%, #06b6d4 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.glow {
+  box-shadow: 0 0 60px rgba(34, 197, 94, 0.3);
+}
+
+.input-glow:focus {
+  box-shadow: 0 0 20px rgba(34, 197, 94, 0.2);
+}
