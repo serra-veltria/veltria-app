@@ -1,9 +1,9 @@
 import { Request, Response } from 'express';
 import { z } from 'zod';
-import { User } from '../models/user.model.js';
+import { User, IUser } from '../models/user.model.js';
 import { generateToken } from '../utils/jwt.js';
 import { AuthRequest } from '../middleware/auth.middleware.js';
-import type { ApiResponse, AuthResponse, User as UserType } from '@veltria/shared';
+import type { ApiResponse, AuthResponse, User as UserType, OAuthProvider } from '@veltria/shared';
 
 // Validation schemas
 const signupSchema = z.object({
@@ -17,11 +17,14 @@ const loginSchema = z.object({
   password: z.string().min(1, 'Password is required'),
 });
 
-function formatUser(user: { _id: any; email: string; name: string; createdAt: Date; updatedAt: Date }): UserType {
+function formatUser(user: IUser): UserType {
   return {
     id: user._id.toString(),
     email: user.email,
     name: user.name,
+    avatar: user.avatar,
+    emailVerified: user.emailVerified,
+    linkedProviders: user.oauthAccounts.map((account) => account.provider as OAuthProvider),
     createdAt: user.createdAt,
     updatedAt: user.updatedAt,
   };
@@ -42,8 +45,26 @@ export async function signup(req: Request, res: Response): Promise<void> {
     const { email, password, name } = validation.data;
 
     // Check if user already exists
-    const existingUser = await User.findOne({ email });
+    const existingUser = await User.findOne({ email: email.toLowerCase() });
     if (existingUser) {
+      // If user exists but only has OAuth accounts (no password), allow setting password
+      if (!existingUser.password) {
+        existingUser.password = password;
+        await existingUser.save();
+        
+        const token = generateToken(existingUser._id.toString());
+        const response: ApiResponse<AuthResponse> = {
+          success: true,
+          data: {
+            user: formatUser(existingUser),
+            token,
+          },
+          message: 'Password set successfully. You can now log in with email and password.',
+        };
+        res.status(200).json(response);
+        return;
+      }
+      
       const response: ApiResponse = {
         success: false,
         error: 'Email already registered',
@@ -53,7 +74,7 @@ export async function signup(req: Request, res: Response): Promise<void> {
     }
 
     // Create new user
-    const user = await User.create({ email, password, name });
+    const user = await User.create({ email: email.toLowerCase(), password, name });
     const token = generateToken(user._id.toString());
 
     const response: ApiResponse<AuthResponse> = {
@@ -61,6 +82,7 @@ export async function signup(req: Request, res: Response): Promise<void> {
       data: {
         user: formatUser(user),
         token,
+        isNewUser: true,
       },
       message: 'Account created successfully',
     };
@@ -90,11 +112,22 @@ export async function login(req: Request, res: Response): Promise<void> {
     const { email, password } = validation.data;
 
     // Find user with password field
-    const user = await User.findOne({ email }).select('+password');
+    const user = await User.findOne({ email: email.toLowerCase() }).select('+password');
     if (!user) {
       const response: ApiResponse = {
         success: false,
         error: 'Invalid email or password',
+      };
+      res.status(401).json(response);
+      return;
+    }
+
+    // Check if user has a password (might be OAuth-only user)
+    if (!user.password) {
+      const providers = user.oauthAccounts.map((a) => a.provider).join(', ');
+      const response: ApiResponse = {
+        success: false,
+        error: `This account uses social login (${providers}). Please sign in with your social account or set a password.`,
       };
       res.status(401).json(response);
       return;

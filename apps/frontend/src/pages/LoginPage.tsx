@@ -1,19 +1,31 @@
-import { useState, FormEvent } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useState, FormEvent, useEffect } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { isValidEmail } from '@veltria/shared';
 import AuthLayout from '../components/AuthLayout';
 import Input from '../components/Input';
 import Button from '../components/Button';
+import { OAuthButtonsGroup, AuthDivider } from '../components/OAuthButtons';
 
 export default function LoginPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { login } = useAuth();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+
+  // Handle OAuth error from redirect
+  useEffect(() => {
+    const oauthError = searchParams.get('error');
+    if (oauthError) {
+      setError(decodeURIComponent(oauthError));
+      // Clean up URL
+      window.history.replaceState({}, '', '/login');
+    }
+  }, [searchParams]);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -43,6 +55,12 @@ export default function LoginPage() {
 
   return (
     <AuthLayout title="Welcome Back" subtitle="Sign in to your Veltria account">
+      {/* OAuth Buttons */}
+      <OAuthButtonsGroup action="signin" className="mb-4" />
+
+      <AuthDivider />
+
+      {/* Email/Password Form */}
       <form onSubmit={handleSubmit}>
         {error && (
           <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 text-sm">

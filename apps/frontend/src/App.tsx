@@ -3,13 +3,14 @@ import { AuthProvider, useAuth } from './hooks/useAuth';
 import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
 import DashboardPage from './pages/DashboardPage';
+import OAuthCallbackPage from './pages/OAuthCallbackPage';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, isLoading } = useAuth();
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-veltria-darker">
         <div className="animate-spin w-8 h-8 border-2 border-veltria-green border-t-transparent rounded-full" />
       </div>
     );
@@ -27,7 +28,7 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-veltria-darker">
         <div className="animate-spin w-8 h-8 border-2 border-veltria-green border-t-transparent rounded-full" />
       </div>
     );
@@ -59,6 +60,10 @@ function App() {
               <SignupPage />
             </PublicRoute>
           }
+        />
+        <Route
+          path="/oauth/callback"
+          element={<OAuthCallbackPage />}
         />
         <Route
           path="/dashboard"
