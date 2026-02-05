@@ -146,7 +146,8 @@ cat ~/.ssh/github-deploy-key
 ### Health check failing
 - Ensure backend has `/api/health` endpoint
 - Check that MongoDB is accessible
-- Look at container logs: `docker logs veltria-backend`
+- **Note:** Backend runs on port 3002 externally (3001 internally in container)
+- Look at container logs: `sudo docker logs veltria-backend`
 
 ## Manual Deployment
 
