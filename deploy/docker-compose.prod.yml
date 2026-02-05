@@ -48,7 +48,7 @@ services:
     container_name: veltria-backend
     restart: unless-stopped
     ports:
-      - "127.0.0.1:3001:3001"  # Only localhost for nginx proxy
+      - "127.0.0.1:3002:3001"  # Only localhost for nginx proxy (3002 external since 3001 is used by webhook server)
     environment:
       - NODE_ENV=production
       - PORT=3001

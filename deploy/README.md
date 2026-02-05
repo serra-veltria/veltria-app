@@ -78,7 +78,7 @@ docker compose ps
 docker compose logs -f
 
 # Test endpoints
-curl http://localhost:3001/api/health
+curl http://localhost:3002/api/health
 curl -I http://localhost:5173/health
 ```
 
@@ -129,7 +129,7 @@ Internet → Nginx (SSL) → Docker Containers
 | Service   | Internal | External (localhost only) |
 |-----------|----------|---------------------------|
 | Frontend  | 80       | 5173                      |
-| Backend   | 3001     | 3001                      |
+| Backend   | 3001     | 3002                      |
 | MongoDB   | 27017    | -                         |
 
 All external ports are bound to 127.0.0.1 - only nginx can access them.
