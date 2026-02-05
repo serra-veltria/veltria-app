@@ -1,12 +1,16 @@
-import { Router, type IRouter } from 'express';
+import { Router, Request, Response } from 'express';
 import { signup, login, getMe, logout } from '../controllers/auth.controller.js';
-import { authMiddleware } from '../middleware/auth.middleware.js';
+import { authMiddleware, AuthRequest } from '../middleware/auth.middleware.js';
 
-const router: IRouter = Router();
+const router = Router();
 
 router.post('/signup', signup);
 router.post('/login', login);
 router.post('/logout', logout);
-router.get('/me', authMiddleware, getMe);
+
+// Wrapper to handle AuthRequest type
+router.get('/me', authMiddleware, (req: Request, res: Response) => {
+  return getMe(req as AuthRequest, res);
+});
 
 export default router;
