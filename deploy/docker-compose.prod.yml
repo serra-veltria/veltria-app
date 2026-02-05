@@ -1,0 +1,82 @@
+# Production docker-compose with MongoDB included
+# Location: /opt/veltria/docker-compose.yml
+
+services:
+  mongodb:
+    image: mongo:7
+    container_name: veltria-mongodb
+    restart: always
+    volumes:
+      - mongodb_data:/data/db
+    environment:
+      MONGO_INITDB_DATABASE: veltria
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    networks:
+      - veltria-network
+    # No external ports - only internal access
+
+  frontend:
+    image: ghcr.io/serra-veltria/veltria-app/frontend:latest
+    container_name: veltria-frontend
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:5173:80"  # Only localhost for nginx proxy
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - veltria-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:80/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  backend:
+    image: ghcr.io/serra-veltria/veltria-app/backend:latest
+    container_name: veltria-backend
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3001:3001"  # Only localhost for nginx proxy
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+      - MONGODB_URI=mongodb://mongodb:27017/veltria
+      - JWT_SECRET=${JWT_SECRET:?JWT_SECRET is required}
+      - JWT_EXPIRES_IN=${JWT_EXPIRES_IN:-7d}
+      - FRONTEND_URL=${FRONTEND_URL:-https://app.veltria.ai}
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - veltria-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3001/api/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  mongodb_data:
+    driver: local
+
+networks:
+  veltria-network:
+    driver: bridge
