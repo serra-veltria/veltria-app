@@ -5,6 +5,7 @@ import { isValidEmail, isValidPassword } from '@veltria/shared';
 import AuthLayout from '../components/AuthLayout';
 import Input from '../components/Input';
 import Button from '../components/Button';
+import { OAuthButtonsGroup, AuthDivider } from '../components/OAuthButtons';
 
 export default function SignupPage() {
   const navigate = useNavigate();
@@ -55,6 +56,12 @@ export default function SignupPage() {
 
   return (
     <AuthLayout title="Create Account" subtitle="Join the future of AI-human collaboration">
+      {/* OAuth Buttons */}
+      <OAuthButtonsGroup action="signup" className="mb-4" />
+
+      <AuthDivider />
+
+      {/* Email/Password Form */}
       <form onSubmit={handleSubmit}>
         {error && (
           <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 text-sm">

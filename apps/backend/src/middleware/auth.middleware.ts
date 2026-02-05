@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction } from 'express';
+import { Request, Response, NextFunction, RequestHandler } from 'express';
 import jwt from 'jsonwebtoken';
 import { User, IUser } from '../models/user.model.js';
 import { env } from '../config/env.js';
@@ -11,11 +11,11 @@ interface JwtPayload {
   userId: string;
 }
 
-export async function authMiddleware(
-  req: AuthRequest,
+export const authMiddleware: RequestHandler = async (
+  req: Request,
   res: Response,
   next: NextFunction
-): Promise<void> {
+): Promise<void> => {
   try {
     const authHeader = req.headers.authorization;
 
@@ -33,9 +33,9 @@ export async function authMiddleware(
       return;
     }
 
-    req.user = user;
+    (req as AuthRequest).user = user;
     next();
   } catch (error) {
     res.status(401).json({ success: false, error: 'Invalid token' });
   }
-}
+};

@@ -1,8 +1,11 @@
 import express from 'express';
 import cors from 'cors';
+import session from 'express-session';
 import { env } from './config/env.js';
 import { connectDatabase } from './config/database.js';
+import passport from './config/passport.js';
 import authRoutes from './routes/auth.routes.js';
+import oauthRoutes from './routes/oauth.routes.js';
 
 const app = express();
 
@@ -13,6 +16,21 @@ app.use(cors({
 }));
 app.use(express.json());
 
+// Session middleware (required for passport OAuth flow)
+app.use(session({
+  secret: env.SESSION_SECRET,
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    secure: env.NODE_ENV === 'production',
+    httpOnly: true,
+    maxAge: 10 * 60 * 1000, // 10 minutes - just for OAuth flow
+  },
+}));
+
+// Initialize passport
+app.use(passport.initialize());
+
 // Health check
 app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
@@ -20,6 +38,7 @@ app.get('/api/health', (_req, res) => {
 
 // Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/auth/oauth', oauthRoutes);
 
 // 404 handler
 app.use((_req, res) => {
