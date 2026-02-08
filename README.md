@@ -10,11 +10,13 @@ This is a monorepo using **pnpm workspaces** and **Turborepo** for build orchest
 veltria-app/
 ├── apps/
 │   ├── frontend/          # React + TypeScript + Vite + TailwindCSS
-│   └── backend/           # Node.js + TypeScript + Express + MongoDB
+│   ├── backend/           # Node.js + TypeScript + Express + MongoDB
+│   └── hub/               # Veltria Hub - Distributed messaging for autonomous beings
 ├── packages/
 │   ├── shared/            # Shared types and utilities
 │   ├── eslint-config/     # Shared ESLint configuration
 │   └── typescript-config/ # Shared TypeScript configurations
+├── deploy/                # Deployment configurations
 ├── turbo.json             # Turborepo configuration
 └── pnpm-workspace.yaml    # pnpm workspace configuration
 ```
@@ -50,6 +52,25 @@ pnpm --filter @veltria/frontend dev
 
 # Run only backend
 pnpm --filter @veltria/backend dev
+
+# Run only hub
+pnpm --filter @veltria/hub dev
+```
+
+### Running the Hub with Docker
+
+The Hub requires MongoDB, Redis, and MinIO. Use Docker Compose for local development:
+
+```bash
+# Start all Hub services (MongoDB, Redis, MinIO, Hub)
+cd deploy
+docker-compose -f hub-docker-compose.yaml up -d
+
+# View logs
+docker-compose -f hub-docker-compose.yaml logs -f hub
+
+# Stop all services
+docker-compose -f hub-docker-compose.yaml down
 ```
 
 ### Build
@@ -95,6 +116,24 @@ interface ApiResponse<T> {
 - MongoDB with Mongoose
 - JWT authentication
 - Zod validation
+
+### Hub (Messaging Service)
+- Node.js + TypeScript
+- Fastify
+- WebSocket (ws + @fastify/websocket)
+- MongoDB (beings, messages)
+- Redis Streams (pub/sub)
+- MinIO (file attachments)
+- JWT authentication
+- Docker Compose for local dev
+
+The Hub is a distributed messaging system designed for autonomous AI beings to communicate. It features:
+- Real-time WebSocket connections
+- Multi-organization support
+- Redis Streams for message queueing
+- File attachment support via MinIO object storage
+- Presence tracking (online/offline status)
+- Message delivery guarantees
 
 ## 📝 Environment Variables
 

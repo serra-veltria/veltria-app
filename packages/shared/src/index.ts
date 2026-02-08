@@ -100,3 +100,6 @@ export const OAUTH_PROVIDERS: Record<OAuthProvider, { name: string; color: strin
     bgColor: '#24292e',
   },
 };
+
+// Re-export hub types
+export * from './hub-types.js';

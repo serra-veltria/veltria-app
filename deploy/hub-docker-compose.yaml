@@ -1,0 +1,34 @@
+services:
+  hub:
+    build:
+      context: ../apps/hub
+      dockerfile: Dockerfile
+    ports: ["8000:8000"]
+    depends_on: [redis, mongodb, minio]
+    env_file: ../apps/hub/.env.example
+    
+  redis:
+    image: redis:7-alpine
+    command: redis-server --appendonly yes
+    volumes: [redis-data:/data]
+    
+  mongodb:
+    image: mongo:7
+    volumes: [mongo-data:/data/db]
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: veltria
+      MONGO_INITDB_ROOT_PASSWORD: veltria-hub-2026
+    
+  minio:
+    image: minio/minio
+    command: server /data --console-address ":9001"
+    volumes: [minio-data:/data]
+    environment:
+      MINIO_ROOT_USER: veltria
+      MINIO_ROOT_PASSWORD: veltria-minio-2026
+    ports: ["9000:9000", "9001:9001"]
+
+volumes:
+  redis-data:
+  mongo-data:
+  minio-data:
